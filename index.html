@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<!--<meta http-equiv="refresh" content="35;url=http://funkyradio.streamingmedia.it:8001/play.mp3"> -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apresentação Zenun</title>
+<style>
+    body {
+        background-color: black;
+        color: #00FF00;
+        font-family: 'Courier', monospace;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+        cursor: default;
+    }
+
+    /* Canvas responsivo */
+    #tv {
+        display: block;
+        image-rendering: pixelated;
+        width: 50vw;
+        max-width: 250px;
+        height: auto;
+        margin: 5vh auto;
+        border-radius: 50%;
+        box-shadow: 0 0 20px #00FF00;
+    }
+
+    /* Cursor piscando */
+    #cursor {
+        display: inline-block;
+        width: 0.6em;
+        height: 1em;
+        background-color: #00FF00;
+        margin-left: 0.2em;
+        animation: blink 0.8s infinite;
+        vertical-align: bottom;
+    }
+
+    @keyframes blink {
+        0% { opacity: 1; }
+        50% { opacity: 0; }
+        100% { opacity: 1; }
+    }
+
+    #nothing { 
+        margin-top: 5vh; 
+        font-family: 'Courier';
+        font-size: 1rem;
+        max-width: 90%;
+        margin-left: auto;
+        margin-right: auto;
+        word-wrap: break-word;
+    }
+
+    #clickOverlay {
+        position: fixed;
+        top:0;
+        left:0;
+        width:100%;
+        height:100%;
+        z-index: 9999;
+    }
+
+    /* Assinatura */
+    #assinatura {
+        margin-top: 5vh;
+        display: none;
+        max-width: 90%;
+    }
+
+    #assinatura path {
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      animation: assinatura-desenho 4s linear forwards;
+    }
+
+    #assinatura text {
+      opacity: 0;
+      animation: assinatura-texto 1s ease forwards;
+      animation-delay: 4s;
+    }
+
+    @keyframes assinatura-desenho {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes assinatura-texto {
+      to {
+        opacity: 1;
+      }
+    }
+
+    /* Ajustes para telas pequenas */
+    @media (max-width: 480px) {
+        #tv {
+            width: 70vw;
+            max-width: 180px;
+        }
+        #nothing {
+            font-size: 0.9rem;
+        }
+        #cursor {
+            width: 0.4em;
+            height: 0.9em;
+        }
+    }
+</style>
+</head>
+<body onload="writetext()">
+
+<audio id="myAudio" src="http://ice1.somafm.com/sf1033-128-mp3" preload="auto" crossorigin="anonymous"></audio>
+
+<!-- Som de digitação (agora em MP3) -->
+<audio id="typeSound" preload="auto">
+  <source src="assets/audio/type.mp3" type="audio/mpeg">
+  Seu navegador não suporta áudio.
+</audio>
+
+<!-- Imagem externa -->
+<img id="original" src="assets/img/p2.jpg" alt="Foto" style="display:none;">
+<canvas id="tv"></canvas>
+
+<div id="nothing"></div><div id="cursor"></div>
+<div id="clickOverlay"></div>
+
+<!-- Assinatura animada -->
+<svg id="assinatura" viewBox="0 0 600 150" width="80%" height="auto" preserveAspectRatio="xMidYMid meet">
+  <path d="M 10 80 
+           Q 50 20, 100 80 
+           T 200 80
+           Q 250 20, 300 80
+           T 400 80
+           Q 450 20, 500 80
+           T 590 80" 
+        stroke="#00FF00" fill="transparent" stroke-width="2"/>
+  <text x="50" y="100" font-size="8vw" font-family="cursive" fill="#00FF00">Reinaldo Nunes</text>
+</svg>
+
+<script>
+var audio = document.getElementById('myAudio');
+var overlay = document.getElementById('clickOverlay');
+
+var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+var source = audioCtx.createMediaElementSource(audio);
+var gainNode = audioCtx.createGain();
+var panNode = audioCtx.createStereoPanner();
+
+source.connect(gainNode).connect(panNode).connect(audioCtx.destination);
+gainNode.gain.value = 0;
+
+function staticPop() {
+    let buffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.05, audioCtx.sampleRate);
+    let data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * 0.5;
+    }
+    let noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    noise.connect(gainNode);
+    noise.start();
+}
+
+function startAudio() {
+    audio.load();
+    audioCtx.resume().then(() => {
+        audio.play().catch(err => console.log("Erro ao reproduzir:", err));
+        gainNode.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 2);
+        function randomizeAudio() {
+            gainNode.gain.setValueAtTime(0.3 + Math.random()*0.4, audioCtx.currentTime);
+            panNode.pan.setValueAtTime(Math.random() - 0.5, audioCtx.currentTime);
+            setTimeout(randomizeAudio, 300 + Math.random()*700);
+        }
+        randomizeAudio();
+    });
+    overlay.style.display = 'none';
+    document.removeEventListener('mousemove', startAudio);
+    document.removeEventListener('touchstart', startAudio);
+    document.removeEventListener('click', startAudio);
+}
+
+document.addEventListener('mousemove', startAudio);
+document.addEventListener('touchstart', startAudio);
+document.addEventListener('click', startAudio);
+</script>
+
+<script type="text/javascript">
+var msg = [];
+msg[0] = "<h2><font color='#00FF00' size='6'><center>®</center></font></h2>";
+msg[1] = "<font color='#00FFFF' size='4'><center>A tecnologia é a arte de transformar ideias em realidade;</center></font><br><br>";
+msg[2] = "<font color='#FFFFFF' size='4'><center>a inteligência artificial é o pincel que amplia nossa imaginação.</center></font><br><br>";
+msg[3] = "<font color='#3D8B37' size='4'><center>Explorando o futuro, um código de cada vez.</center></font><br><br>";
+
+var text1 = "";
+var text2 = "";
+var count = 0;
+var count2 = 0;
+var text = msg[0].split("");
+
+function writetext() {
+    text1 = text2 + "<font color='#FF0000'>" + text[count] + "</font>";
+    text2 += text[count];
+    document.getElementById("nothing").innerHTML = text1;
+
+    if (text[count] !== " " && text[count] !== "<") {
+        var typeSound = document.getElementById('typeSound');
+        typeSound.currentTime = 0; 
+        typeSound.play();
+    }
+
+    if (count < text.length - 1) {
+        count++;
+        setTimeout(writetext, 40);
+    } else {
+        count = 0;
+        if (count2 < msg.length - 1) {
+            count2++;
+            text2 += "";
+            text = msg[count2].split("");
+            setTimeout(writetext, 500);
+        } else {
+            document.getElementById("assinatura").style.display = "block";
+        }
+    }
+}
+</script>
+
+<script>
+const canvas = document.getElementById('tv');
+const ctx = canvas.getContext('2d');
+const img = document.getElementById('original');
+
+img.onload = () => {
+    canvas.width = img.width;
+    canvas.height = img.height;
+    glitchLoop();
+};
+
+function glitchLoop() {
+    const rand = Math.random();
+    let audioSpike = false;
+
+    if (rand < 0.05) {
+        drawFullStatic(true);
+        audioSpike = true;
+    } else if (rand < 0.4) {
+        drawGlitchedImage();
+        if (Math.random()<0.3) audioSpike = true;
+    } else {
+        drawImageWithShake();
+        if (Math.random()<0.1) audioSpike = true;
+    }
+
+    if(audioSpike){
+        let peakVolume = 0.6 + Math.random()*0.4;
+        gainNode.gain.setValueAtTime(peakVolume, audioCtx.currentTime);
+        setTimeout(()=>{gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);}, 80+Math.random()*50);
+        staticPop();
+    }
+
+    requestAnimationFrame(glitchLoop);
+}
+
+function drawFullStatic(color=false) {
+    const imageData = ctx.createImageData(canvas.width, canvas.height);
+    for (let i = 0; i < imageData.data.length; i += 4) {
+        const val = Math.random()*255;
+        imageData.data[i] = val;
+        imageData.data[i+1] = val;
+        imageData.data[i+2] = val;
+        imageData.data[i+3] = 255;
+    }
+    ctx.putImageData(imageData, 0, 0);
+}
+
+function drawGlitchedImage() {
+    const offsetX = Math.random()*20 - 10;
+    const offsetY = Math.random()*10 - 5;
+    ctx.drawImage(img, offsetX, offsetY);
+    for (let i=0;i<5;i++){
+        const slice = Math.random()*50 + 10;
+        const y = Math.random()*canvas.height;
+        const dx = Math.random()*30 - 15;
+        const dy = Math.random()*5 - 2;
+        ctx.drawImage(canvas,0,y,canvas.width,slice,dx,y+dy,canvas.width,slice);
+    }
+    for(let i=0;i<2000;i++){
+        ctx.fillStyle=`rgba(${Math.random()*255},${Math.random()*255},${Math.random()*255},${Math.random()})`;
+        ctx.fillRect(Math.random()*canvas.width,Math.random()*canvas.height,1,1);
+    }
+    if(Math.random()<0.1){ctx.fillStyle='rgba(255,255,255,0.3)';ctx.fillRect(0,0,canvas.width,canvas.height);}
+}
+
+function drawImageWithShake(){
+    const offsetX=Math.random()*4-2;
+    const offsetY=Math.random()*4-2;
+    ctx.drawImage(img, offsetX, offsetY);
+}
+</script>
+
+<!-- Bloqueio do botão direito e atalhos -->
+<script>
+document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    return false;
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === "F12") {
+        e.preventDefault();
+    }
+    if ((e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j')) ||
+        (e.ctrlKey && (e.key === 'U' || e.key === 'u'))) {
+        e.preventDefault();
+    }
+});
+</script>
+
+</body>
+</html>
